@@ -30,6 +30,14 @@ jobs:
         lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
         libgl1-mesa-dev libxml2-utils xsltproc unzip bc python3
 
+    - name: Install repo tool
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
+        source ~/.bashrc
+
     - name: Clean up space
       run: |
         sudo rm -rf /home/runner/work/_temp/*
@@ -49,7 +57,6 @@ jobs:
       run: |
         mkdir -p ~/android-source
         cd ~/android-source
-        export PATH=~/bin:$PATH
         repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
         repo sync -j2  # Limite le nombre de threads
 
@@ -65,7 +72,7 @@ jobs:
         make -j8
 
     - name: Upload built image
-      uses: actions/upload-artifact@v3  # Mise à jour ici
+      uses: actions/upload-artifact@v3
       with:
         name: android-image
         path: out/target/product/smartpi_one/
