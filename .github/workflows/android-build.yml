@@ -19,30 +19,30 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'temurin'  # Spécifiez la distribution ici
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-8-jdk git-core gnupg flex bison gperf build-essential \
+          sudo apt-get install -y openjdk-11-jdk git-core gnupg flex bison gperf build-essential \
           zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
           lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
           libgl1-mesa-dev libxml2-utils xsltproc unzip bc python3
-          
+
           # Installer repo
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
           
           # Ajouter ~/bin au PATH pour la session actuelle
-          export PATH=~/bin:$PATH
+          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
 
       - name: Cache AOSP source
         uses: actions/cache@v3
         with:
           path: ~/android-source
-          key: ${{ runner.os }}-aosp-${{ hashFiles('path/to/important/file') }}
+          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}  # Mettre à jour le chemin vers un fichier pertinent
           restore-keys: |
             ${{ runner.os }}-aosp
 
@@ -52,7 +52,8 @@ jobs:
           mkdir -p ~/android-source
           cd ~/android-source
           # Réaffecter le PATH ici pour s'assurer que repo est accessible
-          export PATH=~/bin:$PATH
+          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
+          source $GITHUB_ENV  # Recharger le PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
           repo sync -j4
 
