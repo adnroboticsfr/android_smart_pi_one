@@ -58,7 +58,7 @@ jobs:
 
       - name: Copy NanoPi M1-specific files
         run: |
-          cp -r $GITHUB_WORKSPACE/device/friendlyarm/smartpi_one/* ~/android-source/device/friendlyarm/smartpi_one/
+          cp -r $GITHUB_WORKSPACE/device/yumiarm/smartpi_one/* ~/android-source/device/yumiarm/smartpi_one/
 
       - name: Build Android for NanoPi M1
         run: |
