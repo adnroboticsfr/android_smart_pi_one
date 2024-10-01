@@ -65,7 +65,7 @@ jobs:
         make -j8
 
     - name: Upload built image
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3  # Mise à jour ici
       with:
         name: android-image
         path: out/target/product/smartpi_one/
