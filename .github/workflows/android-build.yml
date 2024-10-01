@@ -29,6 +29,13 @@ jobs:
           zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
           lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
           libgl1-mesa-dev libxml2-utils xsltproc unzip bc python3
+          
+          # Installer repo
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
+          source ~/.bashrc
 
       - name: Cache AOSP source
         uses: actions/cache@v3
