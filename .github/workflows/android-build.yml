@@ -32,10 +32,11 @@ jobs:
           
           # Installer repo
           mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
-          echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
-          source ~/.bashrc
+          
+          # Ajouter ~/bin au PATH pour la session actuelle
+          export PATH=~/bin:$PATH
 
       - name: Cache AOSP source
         uses: actions/cache@v3
@@ -50,6 +51,8 @@ jobs:
         run: |
           mkdir -p ~/android-source
           cd ~/android-source
+          # Réaffecter le PATH ici pour s'assurer que repo est accessible
+          export PATH=~/bin:$PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
           repo sync -j4
 
