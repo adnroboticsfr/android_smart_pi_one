@@ -35,25 +35,9 @@ jobs:
         mkdir -p ~/bin
         curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
         chmod a+x ~/bin/repo
-        echo 'export PATH=~/bin:$PATH' >> ~/.bashrc
-        source ~/.bashrc
+        echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV  # Met à jour le PATH pour le reste du workflow
 
-    - name: Clean up space
-      run: |
-        sudo rm -rf /home/runner/work/_temp/*
-        sudo rm -rf /home/runner/work/_diag/*
-        sudo rm -rf ~/android-source/.repo/projects/external/grpc-grpc-java.git/refs/tags/*
-
-    - name: Cache AOSP source
-      uses: actions/cache@v2
-      with:
-        path: ~/android-source
-        key: ${{ runner.os }}-aosp-${{ hashFiles('path/to/important/file') }}
-        restore-keys: |
-          ${{ runner.os }}-aosp
-
-    - name: Sync AOSP source (if not cached)
-      if: steps.cache.outputs.cache-hit != 'true'
+    - name: Sync AOSP source
       run: |
         mkdir -p ~/android-source
         cd ~/android-source
