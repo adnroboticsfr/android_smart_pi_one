@@ -1,0 +1,50 @@
+name: Android Build for NanoPi M1
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: '8'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-8-jdk git-core gnupg flex bison gperf build-essential \
+        zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+        lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
+        libgl1-mesa-dev libxml2-utils xsltproc unzip bc python
+
+    - name: Sync AOSP source
+      run: |
+        mkdir ~/android-source
+        cd ~/android-source
+        repo init -u https://android.googlesource.com/platform/manifest
+        repo sync
+
+    - name: Build Android
+      run: |
+        cd ~/android-source
+        source build/envsetup.sh
+        lunch aosp_nanopi_m1-userdebug
+        make -j8
+
+    - name: Upload built image
+      uses: actions/upload-artifact@v2
+      with:
+        name: android-image
+        path: out/target/product/nanopi_m1/
