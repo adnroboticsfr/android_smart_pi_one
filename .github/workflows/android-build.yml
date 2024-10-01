@@ -1,4 +1,4 @@
-name: Android Build for NanoPi M1
+name: Android Build for SmartPI ONE
 
 on:
   push:
@@ -29,22 +29,35 @@ jobs:
         lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
         libgl1-mesa-dev libxml2-utils xsltproc unzip bc python
 
-    - name: Sync AOSP source
-      run: |
-        mkdir ~/android-source
-        cd ~/android-source
-        repo init -u https://android.googlesource.com/platform/manifest
-        repo sync
+    - name: Cache AOSP source
+      uses: actions/cache@v2
+      with:
+        path: ~/android-source
+        key: ${{ runner.os }}-aosp-${{ hashFiles('path/to/important/file') }}
+        restore-keys: |
+          ${{ runner.os }}-aosp
 
-    - name: Build Android
+    - name: Sync AOSP source (if not cached)
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p ~/android-source
+        cd ~/android-source
+        repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
+        repo sync -j4
+
+    - name: Copy NanoPi M1-specific files
+      run: |
+        cp $GITHUB_WORKSPACE/device/friendlyarm/smartpi_one/* ~/android-source/device/friendlyarm/smartpi_one/
+
+    - name: Build Android for NanoPi M1
       run: |
         cd ~/android-source
         source build/envsetup.sh
-        lunch aosp_nanopi_m1-userdebug
+        lunch aosp_smartpi_one-userdebug
         make -j8
 
     - name: Upload built image
       uses: actions/upload-artifact@v2
       with:
         name: android-image
-        path: out/target/product/nanopi_m1/
+        path: out/target/product/smartpi_one/
