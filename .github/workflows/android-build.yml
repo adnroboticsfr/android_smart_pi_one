@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '11'
-          distribution: 'temurin'  # Spécifiez la distribution ici
+          distribution: 'temurin'
 
       - name: Install dependencies
         run: |
@@ -34,7 +34,7 @@ jobs:
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
-          
+
           # Ajouter ~/bin au PATH pour la session actuelle
           echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
 
@@ -42,7 +42,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/android-source
-          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}  # Mettre à jour le chemin vers un fichier pertinent
+          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}
           restore-keys: |
             ${{ runner.os }}-aosp
 
@@ -52,10 +52,9 @@ jobs:
           mkdir -p ~/android-source
           cd ~/android-source
           # Réaffecter le PATH ici pour s'assurer que repo est accessible
-          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
-          source $GITHUB_ENV  # Recharger le PATH
-          repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
-          repo sync -j4
+          export PATH=~/bin:$PATH
+          repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1 --depth=1
+          repo sync -j4 --no-clone-bundle --current-branch --no-tags
 
       - name: Copy NanoPi M1-specific files
         run: |
