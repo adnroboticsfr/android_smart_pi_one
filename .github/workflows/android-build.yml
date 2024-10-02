@@ -13,21 +13,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Étape pour nettoyer l'espace disque
       - name: Clean up disk space
         run: |
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          df -h  # Vérifier l'espace disque disponible après le nettoyage
+          df -h  # Vérifier l'espace disque disponible
 
-      - uses: actions/checkout@v4  # Récupère le code source
+      # Vérifier le code source
+      - uses: actions/checkout@v4
 
+      # Installer JDK 11
       - name: Set up JDK 11
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
 
+      # Installer les dépendances requises
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -40,31 +44,23 @@ jobs:
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
-
-          # Ajouter ~/bin au PATH pour la session actuelle
           echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
 
-      - name: Cache AOSP source
-        uses: actions/cache@v3
-        with:
-          path: ~/android-source
-          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}
-          restore-keys: |
-            ${{ runner.os }}-aosp
-
-      - name: Sync AOSP source (if not cached)
-        if: steps.cache.outputs.cache-hit != 'true'
+      # Synchroniser la source AOSP
+      - name: Sync AOSP source
         run: |
           mkdir -p ~/android-source
           cd ~/android-source
           export PATH=~/bin:$PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
-          repo sync -j2  # Utiliser moins de threads
+          repo sync -j2  # Utiliser moins de threads pour éviter de saturer l'espace
 
+      # Copier les fichiers spécifiques au NanoPi M1
       - name: Copy NanoPi M1-specific files
         run: |
           cp -r $GITHUB_WORKSPACE/device/friendlyarm/smartpi_one/* ~/android-source/device/friendlyarm/smartpi_one/
 
+      # Compiler Android pour NanoPi M1
       - name: Build Android for NanoPi M1
         run: |
           cd ~/android-source
@@ -72,6 +68,7 @@ jobs:
           lunch aosp_smartpi_one-userdebug
           make -j4  # Utiliser moins de threads
 
+      # Télécharger l'image compilée
       - name: Upload built image
         uses: actions/upload-artifact@v3
         with:
