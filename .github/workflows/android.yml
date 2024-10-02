@@ -35,9 +35,10 @@ jobs:
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
-          export PATH=~/bin:$PATH  # Mettre à jour le PATH dans la session courante
-          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV  # S'assurer que PATH est défini pour les étapes suivantes
-          which repo  # Vérifier que repo est bien installé
+          echo "export PATH=\$HOME/bin:\$PATH" >> ~/.bashrc  # Ajoute repo au .bashrc
+          source ~/.bashrc  # Recharge .bashrc pour que le nouveau PATH soit utilisé
+          echo "PATH après mise à jour: $PATH"
+          which repo  # Vérifie si 'repo' est disponible dans le PATH
 
       - name: Sync AOSP source (if not cached)
         run: |
