@@ -1,4 +1,4 @@
-name: Android Build for SmartPI ONE
+name: Android Build for SmartPI ONE 
 
 on:
   push:
