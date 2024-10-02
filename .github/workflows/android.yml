@@ -30,12 +30,14 @@ jobs:
           lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
           libgl1-mesa-dev libxml2-utils xsltproc unzip bc python3
 
-          # Installer repo et l'ajouter au chemin
+      - name: Install repo and update PATH
+        run: |
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
-          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV  # Ajouter ~/bin au PATH
-          source $GITHUB_ENV  # Recharger le chemin pour la session actuelle
+          export PATH=~/bin:$PATH  # Mettre à jour le PATH dans la session courante
+          echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV  # S'assurer que PATH est défini pour les étapes suivantes
+          which repo  # Vérifier que repo est bien installé
 
       - name: Sync AOSP source (if not cached)
         run: |
