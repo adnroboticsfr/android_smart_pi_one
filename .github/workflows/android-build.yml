@@ -13,25 +13,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Étape pour nettoyer l'espace disque
+      # Étape pour libérer de l'espace disque
       - name: Clean up disk space
         run: |
           sudo rm -rf /usr/local/lib/android
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          df -h  # Vérifier l'espace disque disponible
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo df -h  # Vérifier l'espace disque disponible
 
-      # Vérifier le code source
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Installer JDK 11
-      - name: Set up JDK 11
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
 
-      # Installer les dépendances requises
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -44,31 +44,43 @@ jobs:
           mkdir -p ~/bin
           curl -o ~/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
           chmod a+x ~/bin/repo
+
+          # Ajouter ~/bin au PATH pour la session actuelle
           echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
 
-      # Synchroniser la source AOSP
-      - name: Sync AOSP source
+      - name: Cache AOSP source
+        uses: actions/cache@v3
+        with:
+          path: ~/android-source
+          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}  # Mettre à jour le chemin vers un fichier pertinent
+          restore-keys: |
+            ${{ runner.os }}-aosp
+
+      - name: Sync AOSP source (if not cached)
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/android-source
           cd ~/android-source
           export PATH=~/bin:$PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
-          repo sync -j2  # Utiliser moins de threads pour éviter de saturer l'espace
+          repo sync -j2  # Limiter à 2 threads pour économiser de l'espace et de la mémoire
 
-      # Copier les fichiers spécifiques au NanoPi M1
       - name: Copy NanoPi M1-specific files
         run: |
           cp -r $GITHUB_WORKSPACE/device/friendlyarm/smartpi_one/* ~/android-source/device/friendlyarm/smartpi_one/
 
-      # Compiler Android pour NanoPi M1
       - name: Build Android for NanoPi M1
         run: |
           cd ~/android-source
           source build/envsetup.sh
           lunch aosp_smartpi_one-userdebug
-          make -j4  # Utiliser moins de threads
+          make -j2  # Utiliser seulement 2 threads pour limiter l'usage disque
 
-      # Télécharger l'image compilée
+      # Supprimer les fichiers temporaires après la compilation
+      - name: Cleanup after build
+        run: |
+          sudo rm -rf ~/android-source/out
+
       - name: Upload built image
         uses: actions/upload-artifact@v3
         with:
