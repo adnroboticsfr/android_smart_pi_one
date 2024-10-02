@@ -1,0 +1,68 @@
+name: Android Build for SmartPI ONE
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Job 1 : Synchronisation du code source
+  sync:
+    runs-on: self-hosted  # Utiliser un runner auto-hébergé
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk git-core gnupg flex bison gperf build-essential \
+          zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+          lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
+          libgl1-mesa-dev libxml2-utils xsltproc unzip bc python3
+
+      - name: Sync AOSP source
+        run: |
+          mkdir -p ~/android-source
+          cd ~/android-source
+          repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
+          repo sync -j4
+
+  # Job 2 : Compilation des bibliothèques spécifiques
+  build-libs:
+    needs: sync
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build libraries
+        run: |
+          cd ~/android-source
+          source build/envsetup.sh
+          lunch aosp_smartpi_one-userdebug
+          make -j8 libmycustomlib
+
+  # Job 3 : Compilation de l'image Android
+  build-image:
+    needs: build-libs
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Android image
+        run: |
+          cd ~/android-source
+          source build/envsetup.sh
+          lunch aosp_smartpi_one-userdebug
+          make -j8
+
+      - name: Upload built image
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-image
+          path: out/target/product/smartpi_one/
