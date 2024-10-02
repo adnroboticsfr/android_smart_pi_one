@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Clean up disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          df -h  # Vérifier l'espace disque disponible après le nettoyage
+
       - uses: actions/checkout@v4  # Récupère le code source
 
       - name: Set up JDK 11
@@ -41,7 +48,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/android-source
-          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}  # Mettre à jour le chemin vers un fichier pertinent
+          key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}
           restore-keys: |
             ${{ runner.os }}-aosp
 
@@ -52,7 +59,7 @@ jobs:
           cd ~/android-source
           export PATH=~/bin:$PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1
-          repo sync -j4
+          repo sync -j2  # Utiliser moins de threads
 
       - name: Copy NanoPi M1-specific files
         run: |
@@ -63,7 +70,7 @@ jobs:
           cd ~/android-source
           source build/envsetup.sh
           lunch aosp_smartpi_one-userdebug
-          make -j8
+          make -j4  # Utiliser moins de threads
 
       - name: Upload built image
         uses: actions/upload-artifact@v3
