@@ -54,7 +54,14 @@ jobs:
           # Réaffecter le PATH ici pour s'assurer que repo est accessible
           export PATH=~/bin:$PATH
           repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1 --depth=1
-          repo sync -j4 --no-clone-bundle --current-branch --no-tags
+          # Limiter la profondeur pour éviter de télécharger un historique complet
+          repo sync -j4 --no-clone-bundle --current-branch --no-tags --depth=1
+          
+      - name: Cleanup cache and temp files
+        run: |
+          sudo rm -rf ~/android-source/.repo
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
       - name: Copy NanoPi M1-specific files
         run: |
