@@ -14,12 +14,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Mise à jour vers la version compatible Node.js 20
+        uses: actions/checkout@v3  # Mise à jour à v3
 
       - name: Set up JDK
-        uses: actions/setup-java@v3  # Mise à jour vers la version compatible Node.js 20
+        uses: actions/setup-java@v3  # Mise à jour à v3
         with:
-          java-version: '8'
+          java-version: '11'  # Utilisez Java 11 pour AOSP
           distribution: 'temurin'
 
       - name: Install dependencies
@@ -39,7 +39,7 @@ jobs:
           echo 'export PATH=~/bin:$PATH' >> $GITHUB_ENV
 
       - name: Cache AOSP source
-        uses: actions/cache@v3  # Mise à jour vers la version compatible Node.js 20
+        uses: actions/cache@v3  # Mise à jour à v3
         with:
           path: ~/android-source
           key: ${{ runner.os }}-aosp-${{ hashFiles('**/Android.bp') }}
@@ -53,4 +53,22 @@ jobs:
           cd ~/android-source
           # Réaffecter le PATH ici pour s'assurer que repo est accessible
           export PATH=~/bin:$PATH
-          repo init -u https://android.googlesource.com
+          repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1 --depth=1
+          repo sync -j4 --no-clone-bundle --current-branch --no-tags
+
+      - name: Copy NanoPi M1-specific files
+        run: |
+          cp -r $GITHUB_WORKSPACE/device/yumiarm/smartpi_one/* ~/android-source/device/yumiarm/smartpi_one/
+
+      - name: Build Android for NanoPi M1
+        run: |
+          cd ~/android-source
+          source build/envsetup.sh
+          lunch aosp_smartpi_one-userdebug
+          make -j8
+
+      - name: Upload built image
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-image
+          path: out/target/product/smartpi_one/
