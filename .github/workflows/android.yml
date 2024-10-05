@@ -53,7 +53,7 @@ jobs:
           cd ~/android-source
           # Réaffecter le PATH ici pour s'assurer que repo est accessible
           export PATH=~/bin:$PATH
-          repo init -u https://android.googlesource.com/platform/manifest -b android-11.0.0_r1 --depth=1
+          repo init -u https://android.googlesource.com/platform/manifest -b android-12.0.0_r31 --depth=1
           repo sync -j4 --no-clone-bundle --current-branch --no-tags
 
       - name: Copy NanoPi M1-specific files
